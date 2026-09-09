@@ -22,4 +22,39 @@ public class JobEligibleBranch
   private Long jobId;
   @NotNull
   private String branch;
+  
+  
+  public JobEligibleBranch() {
+	super();
+}
+  public JobEligibleBranch(Long id, Long jobId, @NotNull String branch) {
+	super();
+	this.id = id;
+	this.jobId = jobId;
+	this.branch = branch;
+  }
+  public Long getId() {
+	return id;
+  }
+  public void setId(Long id) {
+	this.id = id;
+  }
+  public Long getJobId() {
+	return jobId;
+  }
+  public void setJobId(Long jobId) {
+	this.jobId = jobId;
+  }
+  public String getBranch() {
+	return branch;
+  }
+  public void setBranch(String branch) {
+	this.branch = branch;
+  }
+  @Override
+  public String toString() {
+	return "JobEligibleBranch [id=" + id + ", jobId=" + jobId + ", branch=" + branch + "]";
+  }
+  
+  
 }

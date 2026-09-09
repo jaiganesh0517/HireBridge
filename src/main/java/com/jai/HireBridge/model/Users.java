@@ -34,5 +34,66 @@ public class Users
 	
 	@Enumerated(EnumType.STRING)
 	private Role userRole;
+    
+	
+	public Users() {
+		super();
+	}
+
+	public Users(Long userId, String userName, @NotNull String emailId, @NotNull String password, Role userRole) {
+		super();
+		this.userId = userId;
+		this.userName = userName;
+		this.emailId = emailId;
+		this.password = password;
+		this.userRole = userRole;
+	}
+
+	public Long getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Long userId) {
+		this.userId = userId;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getEmailId() {
+		return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public Role getUserRole() {
+		return userRole;
+	}
+
+	public void setUserRole(Role userRole) {
+		this.userRole = userRole;
+	}
+
+	@Override
+	public String toString() {
+		return "Users [userId=" + userId + ", userName=" + userName + ", emailId=" + emailId + ", password=" + password
+				+ ", userRole=" + userRole + "]";
+	}
   
+	
 }
