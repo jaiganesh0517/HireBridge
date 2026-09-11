@@ -77,4 +77,25 @@ public class ApplicationService
 	   appRepo.save(app);
 	   return app;
    }
+   
+   public Application updateApplicationStatus(Long recruiterId ,Long applicationId ,AppliStatus newStatus) {
+		 Optional<Application> application = appRepo.findById(applicationId); 
+		 if(application.isEmpty()) {
+			 throw new RuntimeException("NO Application found");
+		 }
+		 Application app = application.get();
+		 Long id = app.getJobId();
+		 Optional<JobPosting> jobPost = jbRepo.findById(id);
+		 if(jobPost.isEmpty()) {
+			 throw new RuntimeException("NO job found");
+		 }
+		 JobPosting post = jobPost.get();
+		 if(recruiterId !=post.getRecruiterId()) {
+			 throw new RuntimeException("You don;t have permision to change this application");
+		 }
+		 app.setStatus(newStatus);
+		 appRepo.save(app);
+		 return app;
+   }
+
 }

@@ -3,7 +3,9 @@ package com.jai.HireBridge.service;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+
 import com.jai.HireBridge.model.Role;
+
 import com.jai.HireBridge.model.Users;
 import com.jai.HireBridge.repositories.UsersRepository;
 
@@ -48,4 +50,5 @@ public class UserService
 	}
 	return user;
   }
-}
+  
+  }
