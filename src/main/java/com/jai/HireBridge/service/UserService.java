@@ -40,7 +40,7 @@ public class UserService
   {
 	Users user = uRepo.findByEmailId(emailId);
 	if(user == null) {
-		throw new RuntimeException("Invalid emial or password");
+		throw new RuntimeException("Invalid email or password");
 	}
 	
 	if(!passEnco.matches(Password, user.getPassword())) {

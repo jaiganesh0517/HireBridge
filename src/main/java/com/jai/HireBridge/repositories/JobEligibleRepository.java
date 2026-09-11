@@ -6,4 +6,5 @@ import com.jai.HireBridge.model.JobEligibleBranch;
 
 public interface JobEligibleRepository extends JpaRepository<JobEligibleBranch,Long>{
 
+	boolean existsByJobIdAndBranch(Long jobId, String branch);
 }
