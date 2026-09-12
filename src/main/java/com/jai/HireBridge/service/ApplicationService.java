@@ -37,7 +37,7 @@ public class ApplicationService
 
 
 
-   public Application applyToJob(Long studentId ,Long jobId,AppliStatus status,LocalDateTime appliedAt) {
+   public Application applyToJob(Long studentId ,Long jobId) {
 	   
 	   Optional<JobPosting> jPost = jbRepo.findById(jobId);
 	   if(jPost.isEmpty()) {
@@ -72,8 +72,8 @@ public class ApplicationService
 	   Application app = new Application();
 	   app.setStudentId(studentId);
 	   app.setJobId(jobId);
-	   app.setStatus(status);
-	   app.setAppliedAt(appliedAt);
+	   app.setStatus(AppliStatus.APPLIED);
+	   app.setAppliedAt(LocalDateTime.now());
 	   appRepo.save(app);
 	   return app;
    }
@@ -90,8 +90,8 @@ public class ApplicationService
 			 throw new RuntimeException("NO job found");
 		 }
 		 JobPosting post = jobPost.get();
-		 if(recruiterId !=post.getRecruiterId()) {
-			 throw new RuntimeException("You don;t have permision to change this application");
+		 if(!recruiterId.equals(post.getRecruiterId())) {
+			 throw new RuntimeException("You don't have permision to change this application");
 		 }
 		 app.setStatus(newStatus);
 		 appRepo.save(app);
