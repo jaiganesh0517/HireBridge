@@ -2,6 +2,7 @@ package com.jai.HireBridge.service;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.exception.DuplicateResourceException;
 import com.jai.HireBridge.model.StudentProfile;
 import com.jai.HireBridge.repositories.StudentRepository;
 
@@ -18,7 +19,7 @@ public class StudentProfileService
 	
 	public StudentProfile createStudentProfile(Long userId , String about,String branch,int batchYear,Double cgpa ,String skills){
 		if(stuRepo.existsById(userId)) {
-			throw new RuntimeException("Profile already existed");
+			throw new DuplicateResourceException("Profile already existed");
 		}
 		StudentProfile profile = new StudentProfile();
 		profile.setAbout(about);

@@ -5,6 +5,10 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.exception.BusinessRuleException;
+import com.jai.HireBridge.exception.DuplicateResourceException;
+import com.jai.HireBridge.exception.ResourceNotFoundException;
+import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.AppliStatus;
 import com.jai.HireBridge.model.Application;
 import com.jai.HireBridge.model.JobPosting;
@@ -41,7 +45,7 @@ public class ApplicationService
 	   
 	   Optional<JobPosting> jPost = jbRepo.findById(jobId);
 	   if(jPost.isEmpty()) {
-		   throw new RuntimeException("Job not found");
+		   throw new ResourceNotFoundException("Job not found");
 	   }
 	   
 	   JobPosting job = jPost.get();
@@ -49,11 +53,11 @@ public class ApplicationService
 	   
 	   Status stat = job.getJobStatus();
 	   if(stat.equals(Status.CLOSED)) {
-		   throw new RuntimeException("Application for this job is closed");
+		   throw new BusinessRuleException("Application for this job is closed");
 	   }
 	   
 	   if(appRepo.existsByStudentIdAndJobId(studentId, jobId)) {
-		   throw new RuntimeException("You are already registered for this job");
+		   throw new DuplicateResourceException("You are already registered for this job");
 	   }
 	   Optional<StudentProfile> sProfile = sPRepo.findById(studentId);
 	   StudentProfile profile;
@@ -61,13 +65,13 @@ public class ApplicationService
 	       profile = sProfile.get();
 	       if(profile.getCgpa() >= job.getMinCgpa()) {
 	    	   if(!jERepo.existsByJobIdAndBranch(jobId, profile.getBranch())) {
-	    		   throw new RuntimeException("Your branch is not eligible for this job");
+	    		   throw new BusinessRuleException("Your branch is not eligible for this job");
 	    	   }
 	       }else {
-	    	   throw new RuntimeException("CGPA is lower than expected");
+	    	   throw new BusinessRuleException("CGPA is lower than expected");
 	       }
 	   }else {
-	              throw new RuntimeException("Your profile is not available");
+	              throw new ResourceNotFoundException("Your profile is not available");
 	        }
 	   Application app = new Application();
 	   app.setStudentId(studentId);
@@ -81,17 +85,17 @@ public class ApplicationService
    public Application updateApplicationStatus(Long recruiterId ,Long applicationId ,AppliStatus newStatus) {
 		 Optional<Application> application = appRepo.findById(applicationId); 
 		 if(application.isEmpty()) {
-			 throw new RuntimeException("NO Application found");
+			 throw new ResourceNotFoundException("NO Application found");
 		 }
 		 Application app = application.get();
 		 Long id = app.getJobId();
 		 Optional<JobPosting> jobPost = jbRepo.findById(id);
 		 if(jobPost.isEmpty()) {
-			 throw new RuntimeException("NO job found");
+			 throw new ResourceNotFoundException("NO job found");
 		 }
 		 JobPosting post = jobPost.get();
 		 if(!recruiterId.equals(post.getRecruiterId())) {
-			 throw new RuntimeException("You don't have permision to change this application");
+			 throw new UnauthorizedException("You don't have permision to change this application");
 		 }
 		 app.setStatus(newStatus);
 		 appRepo.save(app);

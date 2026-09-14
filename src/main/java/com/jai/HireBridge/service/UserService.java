@@ -3,7 +3,9 @@ package com.jai.HireBridge.service;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-
+import com.jai.HireBridge.exception.BusinessRuleException;
+import com.jai.HireBridge.exception.DuplicateResourceException;
+import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.Role;
 
 import com.jai.HireBridge.model.Users;
@@ -27,7 +29,7 @@ public class UserService
 	  Users user1 = new Users();
 	  user1 = uRepo.findByEmailId(emailId);
 	  if(user1 != null) {
-		 throw new RuntimeException("Email already registered"); 
+		 throw new DuplicateResourceException("Email already registered"); 
 	  }
 	  user.setEmailId(emailId);
 	  String hashPass = passEnco.encode(password);
@@ -42,11 +44,11 @@ public class UserService
   {
 	Users user = uRepo.findByEmailId(emailId);
 	if(user == null) {
-		throw new RuntimeException("Invalid email or password");
+		throw new BusinessRuleException("Invalid email or password");
 	}
 	
 	if(!passEnco.matches(Password, user.getPassword())) {
-		throw new RuntimeException("Invalid emial or password");
+		throw new BusinessRuleException("Invalid email or password");
 	}
 	return user;
   }
