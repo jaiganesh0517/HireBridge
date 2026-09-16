@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jai.HireBridge.dto.JobPostingRequest;
+import com.jai.HireBridge.dto.JobPostingRequest; 
 import com.jai.HireBridge.model.JobPosting;
 import com.jai.HireBridge.service.JobPostingService;
 
