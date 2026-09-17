@@ -3,9 +3,12 @@ package com.jai.HireBridge.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.exception.ResourceNotFoundException;
+import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.JobEligibleBranch;
 import com.jai.HireBridge.model.JobPosting;
 import com.jai.HireBridge.model.Status;
@@ -39,14 +42,24 @@ public class JobPostingService
 	  return jobPost;
   }
   
-  public void addEligibleBranches(Long jobId , List<String> branches) {
-	  
-	  for(String branch : branches) 
-	  {
-		JobEligibleBranch brnch = new JobEligibleBranch();  
-		brnch.setJobId(jobId);
-		brnch.setBranch(branch);
-		jERepo.save(brnch);
+  public void addEligibleBranches(Long jobId ,Long recruiterId, List<String> branches) {
+	  Optional<JobPosting> jPost = jpRepo.findById(jobId);
+	  JobPosting post ;
+	  if(jPost.isPresent()) {
+		  post = jPost.get();
+		  if(post.getRecruiterId().equals(recruiterId)) {
+			  for(String branch : branches) 
+			  {
+				JobEligibleBranch brnch = new JobEligibleBranch();  
+				brnch.setJobId(jobId);
+				brnch.setBranch(branch);
+				jERepo.save(brnch);
+			  }  
+		  }else {
+			  throw new UnauthorizedException("You did't have access to modify");
+		  }
+	  }else {
+		  throw new ResourceNotFoundException("Resource Not Found");
 	  }
   }
 }

@@ -2,6 +2,7 @@ package com.jai.HireBridge.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,16 +24,19 @@ public class ApplicationController {
 		this.appService = appService;
 	}
 	
-	@PostMapping("/{jobId}/apply/{studentId}")
-	public ResponseEntity<Application> applyToJob(@PathVariable Long jobId ,@PathVariable Long studentId){
+	@PostMapping("/{jobId}/apply")
+	public ResponseEntity<Application> applyToJob(@PathVariable Long jobId ,Authentication authentication){
+		Long studentId = (Long) authentication.getPrincipal();
 		Application app = appService.applyToJob(studentId, jobId);
 		return ResponseEntity.status(HttpStatus.CREATED).body(app);
 	}
 	
-	@PatchMapping("/{recruiterId}/{applicationId}/status/{newStatus}")
-	public ResponseEntity<String> updateApplicationStatus(@PathVariable Long recruiterId,@PathVariable Long applicationId , @PathVariable AppliStatus newStatus){
-		appService.updateApplicationStatus(recruiterId, applicationId, newStatus);
-		return ResponseEntity.status(HttpStatus.OK).body("Status updated successfully");
+	@PatchMapping("/{applicationId}/status/{newStatus}")
+	public Application updateApplicationStatus(@PathVariable Long applicationId , @PathVariable AppliStatus newStatus,Authentication authentication){
+		
+		Long recruiterId = (Long) authentication.getPrincipal();
+		Application app = appService.updateApplicationStatus(recruiterId, applicationId, newStatus);
+		return app;
 	}
 }
 
