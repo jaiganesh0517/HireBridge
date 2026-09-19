@@ -1,21 +1,23 @@
 package com.jai.HireBridge.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class RecruiterProfile 
 {
 	@Id
-    private Long userId;
+	@Column(name = "user_id")
+	private Long userId;
+
+	@OneToOne
+	@MapsId
+	@JoinColumn(name = "user_id")
+	private Users user;
 	
 	private String companyName;
 	
@@ -28,20 +30,16 @@ public class RecruiterProfile
 		super();
 	}
 
-	public RecruiterProfile(Long userId, String companyName, String designation, String summary) {
+	public RecruiterProfile(Users user, String companyName, String designation, String summary) {
 		super();
-		this.userId = userId;
+		this.user = user;
 		this.companyName = companyName;
 		this.designation = designation;
 		this.summary = summary;
 	}
 
-	public Long getUserId() {
-		return userId;
-	}
-
-	public void setUserId(Long userId) {
-		this.userId = userId;
+	public Users getUserId() {
+		return user;
 	}
 
 	public String getCompanyName() {
@@ -70,7 +68,7 @@ public class RecruiterProfile
 
 	@Override
 	public String toString() {
-		return "RecruiterProfile [userId=" + userId + ", companyName=" + companyName + ", designation=" + designation
+		return "RecruiterProfile [userId=" + user + ", companyName=" + companyName + ", designation=" + designation
 				+ ", summary=" + summary + "]";
 	}
 	

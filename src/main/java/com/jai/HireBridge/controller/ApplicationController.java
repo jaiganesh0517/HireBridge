@@ -33,7 +33,6 @@ public class ApplicationController {
 	
 	@PatchMapping("/{applicationId}/status/{newStatus}")
 	public Application updateApplicationStatus(@PathVariable Long applicationId , @PathVariable AppliStatus newStatus,Authentication authentication){
-		
 		Long recruiterId = (Long) authentication.getPrincipal();
 		Application app = appService.updateApplicationStatus(recruiterId, applicationId, newStatus);
 		return app;

@@ -1,21 +1,26 @@
 package com.jai.HireBridge.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
+
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class StudentProfile 
 {
 	@Id
-    private Long userId;
+	@Column(name = "user_id")
+	private Long userId;
+
+	@OneToOne
+	@MapsId
+	@JoinColumn(name = "user_id")
+	private Users user;
+	
     private String about;
     private String branch;
     private int batchYear;
@@ -26,20 +31,17 @@ public class StudentProfile
 	public StudentProfile() {
 		super();
 	}
-	public StudentProfile(Long userId, String about, String branch, int batchYear, double cgpa, String skills) {
+	public StudentProfile(Users user, String about, String branch, int batchYear, double cgpa, String skills) {
 		super();
-		this.userId = userId;
+		this.user = user;
 		this.about = about;
 		this.branch = branch;
 		this.batchYear = batchYear;
 		this.cgpa = cgpa;
 		this.skills = skills;
 	}
-	public Long getUserId() {
-		return userId;
-	}
-	public void setUserId(Long userId) {
-		this.userId = userId;
+	public Users getUser() {
+		return user;
 	}
 	public String getAbout() {
 		return about;
@@ -73,7 +75,7 @@ public class StudentProfile
 	}
 	@Override
 	public String toString() {
-		return "StudentProfile [userId=" + userId + ", about=" + about + ", branch=" + branch + ", batchYear="
+		return "StudentProfile [userId=" + user.getUserId() + ", about=" + about + ", branch=" + branch + ", batchYear="
 				+ batchYear + ", cgpa=" + cgpa + ", skills=" + skills + "]";
 	}
     

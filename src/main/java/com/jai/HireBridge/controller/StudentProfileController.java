@@ -2,6 +2,7 @@ package com.jai.HireBridge.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,7 +14,7 @@ import com.jai.HireBridge.model.StudentProfile;
 import com.jai.HireBridge.service.StudentProfileService;
 
 @RestController
-@RequestMapping("/api/students/{userId}/profile")
+@RequestMapping("/api/students/profile")
 public class StudentProfileController
 {
   
@@ -25,7 +26,8 @@ public class StudentProfileController
 	}
 	
 	@PostMapping()
-	public ResponseEntity<StudentProfile> studentProfile(@RequestBody StudentProfileRequest req ,@PathVariable Long userId){
+	public ResponseEntity<StudentProfile> studentProfile(@RequestBody StudentProfileRequest req ,Authentication auth){
+		Long userId = (Long)auth.getPrincipal();
 		StudentProfile profile = stuService.createStudentProfile(userId, req.getAbout(), req.getBranch(), req.getBatchYear(), req.getCgpa(), req.getSkills());
 		return ResponseEntity.status(HttpStatus.CREATED).body(profile);
 	}
