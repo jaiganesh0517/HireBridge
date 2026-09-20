@@ -5,13 +5,15 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jai.HireBridge.dto.JobPostingRequest; 
+import com.jai.HireBridge.dto.JobPostingRequest;
+import com.jai.HireBridge.dto.JobPostingResponse;
 import com.jai.HireBridge.model.JobPosting;
 import com.jai.HireBridge.service.JobPostingService;
 
@@ -42,6 +44,11 @@ public class JobPostingController
 		Long recruiterId = (Long) authentication.getPrincipal();
 		jBPService.addEligibleBranches(jobId,recruiterId,branches);
 		return ResponseEntity.status(HttpStatus.CREATED).body("Branches added successfully");
+	}
+	
+	@GetMapping("/jobs")
+	public List<JobPostingResponse> getAllJobs(){
+		return jBPService.getAllJobs();
 	}
 	
 }

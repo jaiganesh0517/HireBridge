@@ -4,9 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.dto.JobPostingResponse;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
 import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.JobEligibleBranch;
@@ -61,5 +63,25 @@ public class JobPostingService
 	  }else {
 		  throw new ResourceNotFoundException("Resource Not Found");
 	  }
+  }
+  
+  
+  public List<JobPostingResponse> getAllJobs(){
+	  
+	  return jpRepo.findAll()
+			  .stream()
+			  .map(this::toResponse)
+			  .collect(Collectors.toList());
+  }
+  public JobPostingResponse toResponse(JobPosting job) {
+	  return new JobPostingResponse(
+			  job.getJobPostId(),
+			  job.getTitle(),
+			  job.getDescrip(),
+			  job.getCtc(),
+			  job.getMinCgpa(),
+			  job.getDeadline(),
+			  job.getJobStatus()
+			  );	  
   }
 }

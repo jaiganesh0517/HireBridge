@@ -1,10 +1,13 @@
 package com.jai.HireBridge.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.dto.MyApplicationResponse;
 import com.jai.HireBridge.exception.BusinessRuleException;
 import com.jai.HireBridge.exception.DuplicateResourceException;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
@@ -101,5 +104,28 @@ public class ApplicationService
 		 appRepo.save(app);
 		 return app;
    }
-
+   
+   public List<MyApplicationResponse> getMyApplication(Long studentId){
+	   List<Application> application = appRepo.findByStudentId(studentId);
+	   
+	   return application.stream()
+			   .map(this::toMyApplicationResponse)
+			   .collect(Collectors.toList());
+   }
+    
+   private MyApplicationResponse toMyApplicationResponse(Application app) {
+	   JobPosting job = jbRepo.findById(app.getJobId())
+			   .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
+   
+	   return new MyApplicationResponse(
+			   app.getApplicationId(),
+			   app.getJobId(),
+			   app.getStatus(),
+			   app.getAppliedAt(),
+			   job.getTitle(),
+			   job.getDescrip(),
+			   job.getJobStatus()
+			   );
+	   
+   }
 }

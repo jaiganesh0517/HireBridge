@@ -1,14 +1,18 @@
 package com.jai.HireBridge.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jai.HireBridge.dto.MyApplicationResponse;
 import com.jai.HireBridge.model.AppliStatus;
 import com.jai.HireBridge.model.Application;
 import com.jai.HireBridge.service.ApplicationService;
@@ -36,6 +40,11 @@ public class ApplicationController {
 		Long recruiterId = (Long) authentication.getPrincipal();
 		Application app = appService.updateApplicationStatus(recruiterId, applicationId, newStatus);
 		return app;
+	}
+	
+	@GetMapping("/myApplications")
+	public List<MyApplicationResponse> getMyApplications(Authentication auth){
+		return appService.getMyApplication((Long)auth.getPrincipal());
 	}
 }
 

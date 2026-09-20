@@ -34,11 +34,13 @@ public class SecurityConfig
 		    .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 		    .authorizeHttpRequests(auth -> auth
 		    		.requestMatchers("/api/auth/**").permitAll()
+		    		.requestMatchers(HttpMethod.GET,"/api/jobs").permitAll()
 		    		.requestMatchers(HttpMethod.POST,"/api/jobs/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.PATCH,"/api/application/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.POST,"/api/recruiter/profile/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.POST,"/api/students/profile/**").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.POST,"/api/application/**").hasRole("STUDENT")
+		    		.requestMatchers(HttpMethod.GET,"/api/application/myApplication").hasRole("STUDENT")
 		    		.anyRequest().authenticated()
 		    		)
 		            .addFilterBefore(jwtAuthfilter, UsernamePasswordAuthenticationFilter.class);
