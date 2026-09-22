@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jai.HireBridge.dto.ApplicantsResponse;
 import com.jai.HireBridge.dto.MyApplicationResponse;
 import com.jai.HireBridge.model.AppliStatus;
 import com.jai.HireBridge.model.Application;
@@ -45,6 +46,12 @@ public class ApplicationController {
 	@GetMapping("/myApplications")
 	public List<MyApplicationResponse> getMyApplications(Authentication auth){
 		return appService.getMyApplication((Long)auth.getPrincipal());
+	}
+	
+	@GetMapping("{jobId}/applicants")
+	public List<ApplicantsResponse> getAllApplicants(@PathVariable Long jobId ,Authentication auth){
+		Long recruiterId = (Long) auth.getPrincipal();
+		return appService.getApplicantsForJob(jobId, recruiterId);
 	}
 }
 

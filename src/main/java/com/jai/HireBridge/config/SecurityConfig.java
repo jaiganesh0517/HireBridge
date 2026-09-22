@@ -41,6 +41,7 @@ public class SecurityConfig
 		    		.requestMatchers(HttpMethod.POST,"/api/students/profile/**").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.POST,"/api/application/**").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.GET,"/api/application/myApplication").hasRole("STUDENT")
+		    		.requestMatchers(HttpMethod.GET,"/api/application/{jobId}/applicants").hasRole("RECRUITER")
 		    		.anyRequest().authenticated()
 		    		)
 		            .addFilterBefore(jwtAuthfilter, UsernamePasswordAuthenticationFilter.class);
