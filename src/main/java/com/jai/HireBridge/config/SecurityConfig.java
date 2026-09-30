@@ -1,5 +1,7 @@
 package com.jai.HireBridge.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,15 +34,23 @@ public class SecurityConfig
 		http
 		    .csrf(csrf -> csrf.disable())
 		    .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+		    .cors(cors -> cors.configurationSource(request -> {
+		    	var config = new org.springframework.web.cors.CorsConfiguration();
+		    	config.setAllowedOrigins(List.of("http://localhost:5173"));
+		    	config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE"));
+		    	config.setAllowedHeaders(List.of("*"));
+		    	return config;
+		    }))
 		    .authorizeHttpRequests(auth -> auth
 		    		.requestMatchers("/api/auth/**").permitAll()
 		    		.requestMatchers(HttpMethod.GET,"/api/jobs").permitAll()
+		    		.requestMatchers(HttpMethod.GET, "/api/myJobs").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.POST,"/api/jobs/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.PATCH,"/api/application/**").hasRole("RECRUITER")
+		    		.requestMatchers(HttpMethod.GET, "/api/application/myApplication").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.POST,"/api/recruiter/profile/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.POST,"/api/students/profile/**").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.POST,"/api/application/**").hasRole("STUDENT")
-		    		.requestMatchers(HttpMethod.GET,"/api/application/myApplication").hasRole("STUDENT")
 		    		.requestMatchers(HttpMethod.GET,"/api/application/{jobId}/applicants").hasRole("RECRUITER")
 		    		.anyRequest().authenticated()
 		    		)

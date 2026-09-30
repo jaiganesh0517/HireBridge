@@ -48,7 +48,7 @@ public class ApplicationController {
 		return appService.getMyApplication((Long)auth.getPrincipal());
 	}
 	
-	@GetMapping("{jobId}/applicants")
+	@GetMapping("/{jobId}/applicants")
 	public List<ApplicantsResponse> getAllApplicants(@PathVariable Long jobId ,Authentication auth){
 		Long recruiterId = (Long) auth.getPrincipal();
 		return appService.getApplicantsForJob(jobId, recruiterId);

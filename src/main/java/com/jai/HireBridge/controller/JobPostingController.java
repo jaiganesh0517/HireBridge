@@ -51,4 +51,10 @@ public class JobPostingController
 		return jBPService.getAllJobs();
 	}
 	
+	@GetMapping("/myJobs")
+	public List<JobPostingResponse> getMyJobs(Authentication auth){
+		Long recruiterId = (Long) auth.getPrincipal();
+		return jBPService.getJobsByRecruiter(recruiterId);
+	}
+	
 }

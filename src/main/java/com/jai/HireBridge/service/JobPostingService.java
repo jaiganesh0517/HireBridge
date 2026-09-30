@@ -84,4 +84,11 @@ public class JobPostingService
 			  job.getJobStatus()
 			  );	  
   }
+  
+  public List<JobPostingResponse> getJobsByRecruiter(Long recruiterId){
+	  List<JobPosting> jobs = jpRepo.findByRecruiterId(recruiterId);
+	  return jobs.stream()
+			  .map(this::toResponse)
+			  .toList();
+  }
 }
