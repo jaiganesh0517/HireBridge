@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.jai.HireBridge.dto.JobPostingResponse;
@@ -13,9 +14,13 @@ import com.jai.HireBridge.exception.ResourceNotFoundException;
 import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.JobEligibleBranch;
 import com.jai.HireBridge.model.JobPosting;
+import com.jai.HireBridge.model.RecruiterProfile;
 import com.jai.HireBridge.model.Status;
+import com.jai.HireBridge.model.Users;
 import com.jai.HireBridge.repositories.JobEligibleRepository;
 import com.jai.HireBridge.repositories.JobPostingRepository;
+
+import jakarta.persistence.criteria.Join;
 
 @Service
 public class JobPostingService 
@@ -91,4 +96,31 @@ public class JobPostingService
 			  .map(this::toResponse)
 			  .toList();
   }
+  
+  public List<JobPostingResponse> searchJobs(String title, String skill) {
+	    Specification<JobPosting> spec = (root, query, cb) -> cb.conjunction();
+
+	    if (title != null && !title.isBlank()) {
+	        spec = spec.and((root, query, cb) ->
+	            cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+	    }
+
+	    if (skill != null && !skill.isBlank()) {
+	        spec = spec.and((root, query, cb) ->
+	            cb.like(cb.lower(root.get("descrip")), "%" + skill.toLowerCase() + "%"));
+	    }
+
+	    return jpRepo.findAll(spec)
+	        .stream()
+	        .map(job -> new JobPostingResponse(
+	            job.getJobPostId(),
+	            job.getTitle(),
+	            job.getDescrip(),
+	            job.getCtc(),
+	            job.getMinCgpa(),
+	            job.getDeadline(),
+	            job.getJobStatus()
+	        ))
+	        .toList();
+	}
 }

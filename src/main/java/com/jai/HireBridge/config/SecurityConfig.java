@@ -44,6 +44,7 @@ public class SecurityConfig
 		    .authorizeHttpRequests(auth -> auth
 		    		.requestMatchers("/api/auth/**").permitAll()
 		    		.requestMatchers(HttpMethod.GET,"/api/jobs").permitAll()
+		    		.requestMatchers(HttpMethod.GET,"/api/jobs/search").permitAll()
 		    		.requestMatchers(HttpMethod.GET, "/api/myJobs").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.POST,"/api/jobs/**").hasRole("RECRUITER")
 		    		.requestMatchers(HttpMethod.PATCH,"/api/application/**").hasRole("RECRUITER")

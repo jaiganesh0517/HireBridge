@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jai.HireBridge.dto.JobPostingRequest;
@@ -55,6 +56,13 @@ public class JobPostingController
 	public List<JobPostingResponse> getMyJobs(Authentication auth){
 		Long recruiterId = (Long) auth.getPrincipal();
 		return jBPService.getJobsByRecruiter(recruiterId);
+	}
+	
+	@GetMapping("/jobs/search")
+	public ResponseEntity<List<JobPostingResponse>> searchJobs(
+	        @RequestParam(required = false) String title,
+	        @RequestParam(required = false) String skill) {
+	    return ResponseEntity.ok(jBPService.searchJobs(title, skill));
 	}
 	
 }
