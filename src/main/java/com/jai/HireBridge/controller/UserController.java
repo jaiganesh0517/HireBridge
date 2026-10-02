@@ -34,7 +34,7 @@ public class UserController {
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
         Users user = userServ.login(req.getEmailId(), req.getPassword());
         String token = jwtUtil.generateToken(user.getUserId(), user.getUserRole().name());
-        AuthResponse response = new AuthResponse(user.getUserId(), user.getUserRole().name(), token);
+        AuthResponse response = new AuthResponse(user.getUserId(), user.getUserRole(), user.getUserName(),token);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
