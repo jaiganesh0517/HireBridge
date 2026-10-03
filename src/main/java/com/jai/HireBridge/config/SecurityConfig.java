@@ -36,7 +36,7 @@ public class SecurityConfig
 		    .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 		    .cors(cors -> cors.configurationSource(request -> {
 		    	var config = new org.springframework.web.cors.CorsConfiguration();
-		    	config.setAllowedOrigins(List.of("http://localhost:5173"));
+		    	config.setAllowedOrigins(List.of("http://localhost:5173", "https://hire-bridge-frontend.vercel.app"));
 		    	config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE"));
 		    	config.setAllowedHeaders(List.of("*"));
 		    	return config;
