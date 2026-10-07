@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jai.HireBridge.dto.JobPostingRequest;
 import com.jai.HireBridge.dto.JobPostingResponse;
+import com.jai.HireBridge.dto.PageResponse;
 import com.jai.HireBridge.model.JobPosting;
 import com.jai.HireBridge.service.JobPostingService;
 
@@ -48,8 +49,12 @@ public class JobPostingController
 	}
 	
 	@GetMapping("/jobs")
-	public List<JobPostingResponse> getAllJobs(){
-		return jBPService.getAllJobs();
+	public ResponseEntity<PageResponse<JobPostingResponse>> getAllJobs(
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "9") int size) {
+	    size = Math.min(Math.max(size, 1), 50);   // keep size between 1 and 50
+	    page = Math.max(page, 0);
+	    return ResponseEntity.ok(jBPService.getAllJobsPaged(page, size));
 	}
 	
 	@GetMapping("/myJobs")
@@ -59,10 +64,14 @@ public class JobPostingController
 	}
 	
 	@GetMapping("/jobs/search")
-	public ResponseEntity<List<JobPostingResponse>> searchJobs(
+	public ResponseEntity<PageResponse<JobPostingResponse>> searchJobs(
 	        @RequestParam(required = false) String title,
-	        @RequestParam(required = false) String skill) {
-	    return ResponseEntity.ok(jBPService.searchJobs(title, skill));
+	        @RequestParam(required = false) String skill,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "9") int size) {
+	    size = Math.min(Math.max(size, 1), 50);
+	    page = Math.max(page, 0);
+	    return ResponseEntity.ok(jBPService.searchJobsPaged(title, skill, page, size));
 	}
 	
 }

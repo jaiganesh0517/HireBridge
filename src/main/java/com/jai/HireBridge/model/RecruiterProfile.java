@@ -38,6 +38,11 @@ public class RecruiterProfile
 		this.summary = summary;
 	}
 
+	
+	public Users getUser() {
+		return user;
+	}
+
 	public Users getUserId() {
 		return user;
 	}

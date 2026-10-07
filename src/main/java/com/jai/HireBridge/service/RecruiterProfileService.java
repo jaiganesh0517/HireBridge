@@ -2,6 +2,8 @@ package com.jai.HireBridge.service;
 
 import org.springframework.stereotype.Service;
 
+import com.jai.HireBridge.dto.RecruiterProfileRequest;
+import com.jai.HireBridge.dto.RecruiterProfileResponse;
 import com.jai.HireBridge.exception.DuplicateResourceException;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
 import com.jai.HireBridge.model.RecruiterProfile;
@@ -33,5 +35,28 @@ public class RecruiterProfileService
 			RecruiterProfile profile = new RecruiterProfile(user, companyName, designation, summary);
 			recruiProfile.save(profile);
 			return profile;
+	}
+	
+	public RecruiterProfileResponse getMyProfile(Long userId) {
+		RecruiterProfile p = recruiProfile.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("Profile not existed"));
+		
+		RecruiterProfileResponse r = new RecruiterProfileResponse();
+		r.setUserName(p.getUser().getUserName());
+		r.setEmailId(p.getUser().getEmailId());
+		r.setCompanyName(p.getCompanyName());
+		r.setDesignation(p.getDesignation());
+		r.setSummary(p.getSummary());
+		return r;
+	}
+	public RecruiterProfile updateProfile(Long userId, RecruiterProfileRequest request) {
+	    RecruiterProfile profile = recruiProfile.findById(userId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
+
+	    profile.setCompanyName(request.getCompanyName());
+	    profile.setDesignation(request.getDesignation());
+	    profile.setSummary(request.getSummary());
+
+	    return recruiProfile.save(profile);
 	}
 }

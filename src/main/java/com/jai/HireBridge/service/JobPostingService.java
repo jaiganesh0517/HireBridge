@@ -6,10 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.jai.HireBridge.dto.JobPostingResponse;
+import com.jai.HireBridge.dto.PageResponse;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
 import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.JobEligibleBranch;
@@ -122,5 +127,27 @@ public class JobPostingService
 	            job.getJobStatus()
 	        ))
 	        .toList();
+	}
+  public PageResponse<JobPostingResponse> getAllJobsPaged(int page, int size) {
+	    Pageable pageable = PageRequest.of(page, size, Sort.by("jobPostId").descending()); // verify field name
+	    Page<JobPosting> result = jpRepo.findAll(pageable);
+	    return toPageResponse(result);
+	}
+
+	public PageResponse<JobPostingResponse> searchJobsPaged(String title, String skill, int page, int size) {
+	    String t = (title == null) ? "" : title.trim();
+	    String s = (skill == null) ? "" : skill.trim();
+	    Pageable pageable = PageRequest.of(page, size, Sort.by("jobPostId").descending());
+	    Page<JobPosting> result = jpRepo.searchJobs(t, s, pageable);
+	    return toPageResponse(result);
+	}
+
+	private PageResponse<JobPostingResponse> toPageResponse(Page<JobPosting> result) {
+	    List<JobPostingResponse> content = result.getContent().stream()
+	        .map(this::toResponse)       // verify: use your existing entity-to-DTO mapping
+	        .toList();
+
+	    return new PageResponse<>(content, result.getNumber(), result.getSize(),
+	            result.getTotalElements(), result.getTotalPages(), result.isLast());
 	}
 }
