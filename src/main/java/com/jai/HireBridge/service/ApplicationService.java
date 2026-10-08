@@ -39,13 +39,12 @@ public class ApplicationService
    
 
    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository jbRepo, StudentRepository sPRepo,
-		JobEligibleRepository jERepo, StudentRepository pRepo, UsersRepository userRepo) {
+		JobEligibleRepository jERepo, UsersRepository userRepo) {
 	super();
 	this.appRepo = appRepo;
 	this.jbRepo = jbRepo;
 	this.sPRepo = sPRepo;
 	this.jERepo = jERepo;
-	this.pRepo = pRepo;
 	this.userRepo = userRepo;
 }
 
@@ -55,10 +54,11 @@ public class ApplicationService
 	   if(jPost.isEmpty()) {
 		   throw new ResourceNotFoundException("Job not found");
 	   }
-	   
+
 	   JobPosting job = jPost.get();
-	   
-	   
+		if (job.getDeadline().isBefore(LocalDateTime.now())) {
+		    throw new BusinessRuleException("Application deadline has passed for this job.");
+		}
 	   Status stat = job.getJobStatus();
 	   if(stat.equals(Status.CLOSED)) {
 		   throw new BusinessRuleException("Application for this job is closed");
