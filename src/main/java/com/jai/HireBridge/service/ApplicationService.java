@@ -1,6 +1,7 @@
 package com.jai.HireBridge.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public class ApplicationService
 	        throw new BusinessRuleException("This job is closed.");
 	    }
 
-	    if (job.getDeadline().isBefore(LocalDateTime.now())) {
+	    if (job.getDeadline().isBefore(LocalDateTime.now(ZoneId.of("Asia/Kolkata")))) {
 	        throw new BusinessRuleException("Application deadline has passed for this job.");
 	    }
 

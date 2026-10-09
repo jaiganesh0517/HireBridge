@@ -1,6 +1,7 @@
 package com.jai.HireBridge.scheduler;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,8 @@ public class JobExpiryScheduler {
 	 @Scheduled(cron = "0 0 * * * *")
 	@Transactional
 	public void closeExpiredJobs() {
-		int closed = jobPostingRepository.closeExpiredJobs(
-				Status.OPEN, Status.CLOSED, LocalDateTime.now());
+		 int closed = jobPostingRepository.closeExpiredJobs(
+			        Status.OPEN, Status.CLOSED, LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 		if (closed > 0) {
 			log.info("Auto-closed {} expired job posting(s)", closed);
 		}
