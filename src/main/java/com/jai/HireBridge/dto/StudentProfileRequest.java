@@ -4,7 +4,7 @@ public class StudentProfileRequest
 {
  
 	private String about;
-	private int bacthYear;
+	private int batchYear;
 	private String branch;
 	private double cgpa;
 	private String skills;
@@ -15,10 +15,10 @@ public class StudentProfileRequest
 		this.about = about;
 	}
 	public int getBatchYear() {
-		return bacthYear;
+		return batchYear;
 	}
 	public void setBatchYear(int bacthYear) {
-		this.bacthYear = bacthYear;
+		this.batchYear = bacthYear;
 	}
 	public String getBranch() {
 		return branch;

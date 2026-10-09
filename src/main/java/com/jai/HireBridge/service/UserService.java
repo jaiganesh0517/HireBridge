@@ -22,6 +22,13 @@ public class UserService
 	this.passEnco = passEnco;
   }
   
+  private static final String PASSWORD_PATTERN = "^(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).{6,}$";
+  public boolean isValid(String password) {
+	  if(password == null) {
+		  return false;
+	  }
+	  return password.matches(PASSWORD_PATTERN);
+  }
   public Users register(String userName, String emailId, String password , Role role) 
   {
 	  Users user = new Users();
@@ -32,6 +39,9 @@ public class UserService
 		 throw new DuplicateResourceException("Email already registered"); 
 	  }
 	  user.setEmailId(emailId);
+	  if(!isValid(password)) {
+		  throw new BusinessRuleException("Password must be at least 6 characters long and atleast have one special ");
+	  }
 	  String hashPass = passEnco.encode(password);
 	  user.setPassword(hashPass);
 	  user.setUserRole(role);
