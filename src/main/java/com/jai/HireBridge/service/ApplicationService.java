@@ -144,7 +144,7 @@ public class ApplicationService
    }
    
    private ApplicantsResponse toApplicantResponse(Application app) {
-	   Optional<StudentProfile> profile = pRepo.findById(app.getStudentId());
+	   Optional<StudentProfile> profile = sPRepo.findById(app.getStudentId());
 	   if(profile.isEmpty()) {
 		   throw new ResourceNotFoundException("Profile Not Found");
 	   }

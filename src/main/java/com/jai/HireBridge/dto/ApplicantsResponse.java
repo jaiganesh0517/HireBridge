@@ -62,6 +62,13 @@ public class ApplicantsResponse
 	public void setSkills(String skills) {
 		this.skills = skills;
 	}
+	public String getEmailId() {
+	    return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+	    this.emailId = emailId;
+	}
 	public Long getApplicationId() {
 		return applicationId;
 	}
