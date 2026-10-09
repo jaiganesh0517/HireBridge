@@ -48,47 +48,41 @@ public class ApplicationService
 	this.userRepo = userRepo;
 }
 
-   public Application applyToJob(Long studentId ,Long jobId) {
-	   
-	   Optional<JobPosting> jPost = jbRepo.findById(jobId);
-	   if(jPost.isEmpty()) {
-		   throw new ResourceNotFoundException("Job not found");
-	   }
+   public Application applyToJob(Long studentId, Long jobId) {
 
-	   JobPosting job = jPost.get();
-		if (job.getDeadline().isBefore(LocalDateTime.now())) {
-		    throw new BusinessRuleException("Application deadline has passed for this job.");
-		}
-	   Status stat = job.getJobStatus();
-	   if(stat.equals(Status.CLOSED)) {
-		   throw new BusinessRuleException("Application for this job is closed");
-	   }
-	   
-	   if(appRepo.existsByStudentIdAndJobId(studentId, jobId)) {
-		   throw new DuplicateResourceException("You are already registered for this job");
-	   }
-	   Optional<StudentProfile> sProfile = sPRepo.findById(studentId);
-	   StudentProfile profile;
-	   if(sProfile.isPresent()) {
-	       profile = sProfile.get();
-	       if(profile.getCgpa() >= job.getMinCgpa()) {
-	    	   if(!jERepo.existsByJobIdAndBranch(jobId, profile.getBranch())) {
-	    		   throw new BusinessRuleException("Your branch is not eligible for this job");
-	    	   }
-	       }else {
-	    	   throw new BusinessRuleException("CGPA is lower than expected");
-	       }
-	   }else {
-	              throw new ResourceNotFoundException("Your profile is not available");
-	        }
-	   Application app = new Application();
-	   app.setStudentId(studentId);
-	   app.setJobId(jobId);
-	   app.setStatus(AppliStatus.APPLIED);
-	   app.setAppliedAt(LocalDateTime.now());
-	   appRepo.save(app);
-	   return app;
-   }
+	    JobPosting job = jbRepo.findById(jobId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
+
+	    if (job.getJobStatus() == Status.CLOSED) {
+	        throw new BusinessRuleException("This job is closed.");
+	    }
+
+	    if (job.getDeadline().isBefore(LocalDateTime.now())) {
+	        throw new BusinessRuleException("Application deadline has passed for this job.");
+	    }
+
+	    if (appRepo.existsByStudentIdAndJobId(studentId, jobId)) {
+	        throw new DuplicateResourceException("You are already registered for this job");
+	    }
+
+	    StudentProfile profile = sPRepo.findById(studentId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Your profile is not available"));
+
+	    if (profile.getCgpa() < job.getMinCgpa()) {
+	        throw new BusinessRuleException("CGPA is lower than expected");
+	    }
+
+	    if (!jERepo.existsByJobIdAndBranch(jobId, profile.getBranch())) {
+	        throw new BusinessRuleException("Your branch is not eligible for this job");
+	    }
+
+	    Application app = new Application();
+	    app.setStudentId(studentId);
+	    app.setJobId(jobId);
+	    app.setStatus(AppliStatus.APPLIED);
+	    app.setAppliedAt(LocalDateTime.now());
+	    return appRepo.save(app);
+	}
    
    public Application updateApplicationStatus(Long recruiterId ,Long applicationId ,AppliStatus newStatus) {
 		 Optional<Application> application = appRepo.findById(applicationId); 
