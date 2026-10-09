@@ -1,5 +1,5 @@
 package com.jai.HireBridge.service;
-
+import com.jai.HireBridge.exception.UnauthorizedException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -42,6 +42,23 @@ class ApplicationServiceTest {
 
     private static final Long STUDENT_ID = 1L;
     private static final Long JOB_ID = 10L;
+    private static final Long RECRUITER_ID = 1000L;   // owner of the job
+    private static final Long OTHER_RECRUITER_ID = 2000L;
+    private static final Long APPLICATION_ID = 50L;
+
+    private Application existingApplication() {
+        Application app = new Application();
+        app.setStudentId(STUDENT_ID);
+        app.setJobId(JOB_ID);
+        app.setStatus(AppliStatus.APPLIED);
+        return app;
+    }
+
+    private JobPosting jobOwnedBy(Long recruiterId) {
+        JobPosting job = new JobPosting();
+        job.setRecruiterId(recruiterId);
+        return job;
+    }
 
     @BeforeEach
     void setUp() {
@@ -161,5 +178,51 @@ class ApplicationServiceTest {
         assertEquals(AppliStatus.APPLIED, result.getStatus());
         assertNotNull(result.getAppliedAt());
         verify(appRepo).save(any(Application.class));
+    }
+ // ---------- updateApplicationStatus ----------
+
+    @Test
+    void updateStatus_applicationNotFound_throwsNotFound() {
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updateApplicationStatus(RECRUITER_ID, APPLICATION_ID, AppliStatus.SHORTLISTED));
+        verify(appRepo, never()).save(any());
+    }
+
+    @Test
+    void updateStatus_jobNotFound_throwsNotFound() {
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(existingApplication()));
+        when(jbRepo.findById(JOB_ID)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updateApplicationStatus(RECRUITER_ID, APPLICATION_ID, AppliStatus.SHORTLISTED));
+        verify(appRepo, never()).save(any());
+    }
+
+    @Test
+    void updateStatus_recruiterDoesNotOwnJob_throwsUnauthorized() {
+        Application app = existingApplication();
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
+        when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
+
+        assertThrows(UnauthorizedException.class,
+                () -> service.updateApplicationStatus(OTHER_RECRUITER_ID, APPLICATION_ID, AppliStatus.SELECTED));
+
+        assertEquals(AppliStatus.APPLIED, app.getStatus()); // status must be untouched
+        verify(appRepo, never()).save(any());
+    }
+
+    @Test
+    void updateStatus_ownerRecruiter_updatesAndSaves() {
+        Application app = existingApplication();
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
+        when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
+
+        Application result = service.updateApplicationStatus(
+                RECRUITER_ID, APPLICATION_ID, AppliStatus.SHORTLISTED);
+
+        assertEquals(AppliStatus.SHORTLISTED, result.getStatus());
+        verify(appRepo).save(app);
     }
 }
