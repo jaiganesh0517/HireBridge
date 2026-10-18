@@ -24,7 +24,7 @@ public class JobExpiryScheduler {
 	}
 
 
-	//@Scheduled(fixedRate = 60000)
+	
 	 @Scheduled(cron = "0 0 * * * *")
 	@Transactional
 	public void closeExpiredJobs() {
