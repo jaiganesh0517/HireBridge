@@ -25,6 +25,7 @@ import com.jai.HireBridge.repositories.JobEligibleRepository;
 import com.jai.HireBridge.repositories.JobPostingRepository;
 import com.jai.HireBridge.repositories.StudentRepository;
 import com.jai.HireBridge.repositories.UsersRepository;
+import com.jai.HireBridge.statemachine.ApplicationStateMachine;
 
 @Service
 public class ApplicationService 
@@ -35,18 +36,20 @@ public class ApplicationService
    private JobEligibleRepository jERepo;
    private StudentRepository pRepo;
    private UsersRepository userRepo;
+   private ApplicationStateMachine appMachine;
    
  
    
 
    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository jbRepo, StudentRepository sPRepo,
-		JobEligibleRepository jERepo, UsersRepository userRepo) {
+		JobEligibleRepository jERepo, UsersRepository userRepo,ApplicationStateMachine appMachine) {
 	super();
 	this.appRepo = appRepo;
 	this.jbRepo = jbRepo;
 	this.sPRepo = sPRepo;
 	this.jERepo = jERepo;
 	this.userRepo = userRepo;
+	this.appMachine = appMachine;
 }
 
    public Application applyToJob(Long studentId, Long jobId) {
@@ -99,6 +102,11 @@ public class ApplicationService
 		 JobPosting post = jobPost.get();
 		 if(!recruiterId.equals(post.getRecruiterId())) {
 			 throw new UnauthorizedException("You don't have permision to change this application");
+		 }
+		 AppliStatus current = app.getStatus();
+		 if (!appMachine.isValidTransition(current, newStatus)) {
+		     throw new BusinessRuleException(
+		         "Cannot change status from " + current + " to " + newStatus);
 		 }
 		 app.setStatus(newStatus);
 		 appRepo.save(app);
