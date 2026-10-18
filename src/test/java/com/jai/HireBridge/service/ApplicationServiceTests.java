@@ -28,6 +28,7 @@ import com.jai.HireBridge.repositories.JobEligibleRepository;
 import com.jai.HireBridge.repositories.JobPostingRepository;
 import com.jai.HireBridge.repositories.StudentRepository;
 import com.jai.HireBridge.repositories.UsersRepository;
+import com.jai.HireBridge.statemachine.ApplicationStateMachine;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
@@ -37,12 +38,13 @@ class ApplicationServiceTest {
     @Mock private StudentRepository sPRepo;
     @Mock private JobEligibleRepository jERepo;
     @Mock private UsersRepository userRepo;
+    @Mock private ApplicationStateMachine appMachine;
 
     private ApplicationService service;
 
     private static final Long STUDENT_ID = 1L;
     private static final Long JOB_ID = 10L;
-    private static final Long RECRUITER_ID = 1000L;   // owner of the job
+    private static final Long RECRUITER_ID = 1000L;   
     private static final Long OTHER_RECRUITER_ID = 2000L;
     private static final Long APPLICATION_ID = 50L;
 
@@ -62,7 +64,7 @@ class ApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationService(appRepo, jbRepo, sPRepo, jERepo, userRepo);
+        service = new ApplicationService(appRepo, jbRepo, sPRepo, jERepo, userRepo,appMachine);
     }
 
  
@@ -214,15 +216,34 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void updateStatus_ownerRecruiter_updatesAndSaves() {
+    void updateStatus_stateMachine_throwsUnauthorized() {
         Application app = existingApplication();
         when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
         when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
+        
+        
+        when(appMachine.isValidTransition(AppliStatus.APPLIED, AppliStatus.SELECTED)).thenReturn(false);
+
+        
+        assertThrows(BusinessRuleException.class, 
+                () -> service.updateApplicationStatus(RECRUITER_ID, APPLICATION_ID, AppliStatus.SELECTED));
+
+        
+        assertEquals(AppliStatus.APPLIED, app.getStatus());
+        verify(appRepo, never()).save(any());
+    }
+    @Test
+    void updateStatus_ownerRecruiter_updatesAndSaves() {
+        Application app = existingApplication(); 
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
+        when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
+        
+        
+        when(appMachine.isValidTransition(AppliStatus.APPLIED, AppliStatus.SHORTLISTED)).thenReturn(true);
 
         Application result = service.updateApplicationStatus(
                 RECRUITER_ID, APPLICATION_ID, AppliStatus.SHORTLISTED);
 
         assertEquals(AppliStatus.SHORTLISTED, result.getStatus());
         verify(appRepo).save(app);
-    }
-}
+    }}
