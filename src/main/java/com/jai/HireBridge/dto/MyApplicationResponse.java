@@ -15,6 +15,8 @@ public class MyApplicationResponse
 	private String title;
 	private String discrip;
 	private Status jobStatus;
+	private String resumeFileName;
+	private boolean hasResume;
 	
 	
 	public MyApplicationResponse(Long applicationId, Long jobId, AppliStatus status, LocalDateTime appliedAt,
@@ -54,7 +56,7 @@ public class MyApplicationResponse
 	}
 	public String getTitle() {
 		return title;
-	}
+	} 
 	public void setTitle(String title) {
 		this.title = title;
 	}
@@ -70,6 +72,19 @@ public class MyApplicationResponse
 	public void setJobStatus(Status jobStatus) {
 		this.jobStatus = jobStatus;
 	}
+	public String getResumeFileName() {
+		return resumeFileName;
+	}
+	public void setResumeFileName(String resumeFileName) {
+		this.resumeFileName = resumeFileName;
+	}
+	public boolean isHasResume() {
+		return hasResume;
+	}
+	public void setHasResume(boolean hasResume) {
+		this.hasResume = hasResume;
+	}
+	
 	
 	
 }

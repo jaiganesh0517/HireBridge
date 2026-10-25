@@ -17,6 +17,10 @@ public class ApplicantsResponse
 	private AppliStatus status;
 	private LocalDateTime appliedAt;
 	private Long studentId;
+	private String resumeFileName;
+	private Long resumeSize;
+	private LocalDateTime resumeUploadedAt;
+	private boolean hasResume;
 	
 	public ApplicantsResponse(String userName, String about, String branch, double cgpa, String skills, String emailId,
 			Long applicationId, AppliStatus status, LocalDateTime appliedAt, Long studentId) {
@@ -92,6 +96,30 @@ public class ApplicantsResponse
 	}
 	public void setStudentId(Long studentId) {
 		this.studentId = studentId;
+	}
+	public String getResumeFileName() {
+		return resumeFileName;
+	}
+	public void setResumeFileName(String resumeFileName) {
+		this.resumeFileName = resumeFileName;
+	}
+	public Long getResumeSize() {
+		return resumeSize;
+	}
+	public void setResumeSize(Long resumeSize) {
+		this.resumeSize = resumeSize;
+	}
+	public LocalDateTime getResumeUploadedAt() {
+		return resumeUploadedAt;
+	}
+	public void setResumeUploadedAt(LocalDateTime resumeUploadedAt) {
+		this.resumeUploadedAt = resumeUploadedAt;
+	}
+	public boolean isHasResume() {
+		return hasResume;
+	}
+	public void setHasResume(boolean hasResume) {
+		this.hasResume = hasResume;
 	}
 	
 	

@@ -1,5 +1,7 @@
 package com.jai.HireBridge.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -26,12 +28,19 @@ public class StudentProfile
     private int batchYear;
     private double cgpa;
     private String skills;
-    
+    private String resumeKey;
+    private String resumeFileName;
+    private String resumeContentType;
+    private Long resumeSize;
+    private LocalDateTime resumeUploadedAt;
     
 	public StudentProfile() {
 		super();
 	}
-	public StudentProfile(Users user, String about, String branch, int batchYear, double cgpa, String skills) {
+	
+	public StudentProfile(Users user, String about, String branch, int batchYear, double cgpa,
+			String skills, String resumeKey, String resumeFileName, String resumeContentType, Long resumeSize,
+			LocalDateTime resumeUploadedAt) {
 		super();
 		this.user = user;
 		this.about = about;
@@ -39,6 +48,11 @@ public class StudentProfile
 		this.batchYear = batchYear;
 		this.cgpa = cgpa;
 		this.skills = skills;
+		this.resumeKey = resumeKey;
+		this.resumeFileName = resumeFileName;
+		this.resumeContentType = resumeContentType;
+		this.resumeSize = resumeSize;
+		this.resumeUploadedAt = resumeUploadedAt;
 	}
 	public Users getUser() {
 		return user;
@@ -73,10 +87,53 @@ public class StudentProfile
 	public void setSkills(String skills) {
 		this.skills = skills;
 	}
+	
+	public String getResumeKey() {
+		return resumeKey;
+	}
+
+	public void setResumeKey(String resumeKey) {
+		this.resumeKey = resumeKey;
+	}
+
+	public String getResumeFileName() {
+		return resumeFileName;
+	}
+
+	public void setResumeFileName(String resumeFileName) {
+		this.resumeFileName = resumeFileName;
+	}
+
+	public String getResumeContentType() {
+		return resumeContentType;
+	}
+
+	public void setResumeContentType(String resumeContentType) {
+		this.resumeContentType = resumeContentType;
+	}
+
+	public Long getResumeSize() {
+		return resumeSize;
+	}
+
+	public void setResumeSize(Long resumeSize) {
+		this.resumeSize = resumeSize;
+	}
+
+	public LocalDateTime getResumeUploadedAt() {
+		return resumeUploadedAt;
+	}
+
+	public void setResumeUploadedAt(LocalDateTime resumeUploadedAt) {
+		this.resumeUploadedAt = resumeUploadedAt;
+	}
+
 	@Override
 	public String toString() {
-		return "StudentProfile [userId=" + user.getUserId() + ", about=" + about + ", branch=" + branch + ", batchYear="
-				+ batchYear + ", cgpa=" + cgpa + ", skills=" + skills + "]";
+		return "StudentProfile [userId=" + userId + ", user=" + user + ", about=" + about + ", branch=" + branch
+				+ ", batchYear=" + batchYear + ", cgpa=" + cgpa + ", skills=" + skills + ", resumeKey=" + resumeKey
+				+ ", resumeFileName=" + resumeFileName + ", resumeContentType=" + resumeContentType + ", resumeSize="
+				+ resumeSize + ", resumeUploadedAt=" + resumeUploadedAt + "]";
 	}
     
     

@@ -27,7 +27,11 @@ public class Application
   
   private LocalDateTime appliedAt;
 
-  
+  private String resumeKey;
+  private String resumeFileName;
+  private String resumeContentType;
+  private Long resumeSize;
+  private LocalDateTime resumeUploadedAt;
   public Application() {
 	super();
 }
@@ -79,6 +83,47 @@ public class Application
 
   public void setAppliedAt(LocalDateTime appliedAt) {
 	this.appliedAt = appliedAt;
+  }
+  
+
+  public String getResumeKey() {
+	return resumeKey;
+} 
+
+  public void setResumeKey(String resumeKey) {
+	this.resumeKey = resumeKey;
+  }
+
+  public String getResumeFileName() {
+	return resumeFileName;
+  }
+
+  public void setResumeFileName(String resumeFileName) {
+	this.resumeFileName = resumeFileName;
+  }
+
+  public String getResumeContentType() {
+	return resumeContentType;
+  }
+
+  public void setResumeContentType(String resumeContentType) {
+	this.resumeContentType = resumeContentType;
+  }
+
+  public Long getResumeSize() {
+	return resumeSize;
+  }
+
+  public void setResumeSize(Long resumeSize) {
+	this.resumeSize = resumeSize;
+  }
+
+  public LocalDateTime getResumeUploadedAt() {
+	return resumeUploadedAt;
+  }
+
+  public void setResumeUploadedAt(LocalDateTime resumeUploadedAt) {
+	this.resumeUploadedAt = resumeUploadedAt;
   }
 
   @Override

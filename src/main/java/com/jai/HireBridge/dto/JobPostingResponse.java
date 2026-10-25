@@ -16,6 +16,10 @@ public class JobPostingResponse {
 	private Status jobStatus;
 	
 	
+	
+	public JobPostingResponse() {
+		super();
+	}
 	public JobPostingResponse(Long jobPostId, String title, String descrip, BigDecimal ctc, double minCgpa,
 			LocalDateTime deadline, Status jobStatus) {
 		super();

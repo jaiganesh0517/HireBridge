@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.jai.HireBridge.dto.ApplicantsResponse;
 import com.jai.HireBridge.dto.MyApplicationResponse;
@@ -26,6 +28,9 @@ import com.jai.HireBridge.repositories.JobPostingRepository;
 import com.jai.HireBridge.repositories.StudentRepository;
 import com.jai.HireBridge.repositories.UsersRepository;
 import com.jai.HireBridge.statemachine.ApplicationStateMachine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Service
 public class ApplicationService 
@@ -37,22 +42,25 @@ public class ApplicationService
    private StudentRepository pRepo;
    private UsersRepository userRepo;
    private ApplicationStateMachine appMachine;
+   private ResumeStorageService resumeStorage;
+   private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
    
  
    
 
    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository jbRepo, StudentRepository sPRepo,
-		JobEligibleRepository jERepo, UsersRepository userRepo,ApplicationStateMachine appMachine) {
-	super();
-	this.appRepo = appRepo;
-	this.jbRepo = jbRepo;
-	this.sPRepo = sPRepo;
-	this.jERepo = jERepo;
-	this.userRepo = userRepo;
-	this.appMachine = appMachine;
-}
+			JobEligibleRepository jERepo, UsersRepository userRepo, ApplicationStateMachine appMachine,
+			ResumeStorageService resumeStorage) {
+		this.appRepo = appRepo;
+		this.jbRepo = jbRepo;
+		this.sPRepo = sPRepo;
+		this.jERepo = jERepo;
+		this.userRepo = userRepo;
+		this.appMachine = appMachine;
+		this.resumeStorage = resumeStorage;
+	}
 
-   public Application applyToJob(Long studentId, Long jobId) {
+   public Application applyToJob(Long studentId, Long jobId ,MultipartFile file) {
 
 	    JobPosting job = jbRepo.findById(jobId)
 	            .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
@@ -71,7 +79,7 @@ public class ApplicationService
 
 	    StudentProfile profile = sPRepo.findById(studentId)
 	            .orElseThrow(() -> new ResourceNotFoundException("Your profile is not available"));
-
+        
 	    if (profile.getCgpa() < job.getMinCgpa()) {
 	        throw new BusinessRuleException("CGPA is lower than expected");
 	    }
@@ -80,13 +88,51 @@ public class ApplicationService
 	        throw new BusinessRuleException("Your branch is not eligible for this job");
 	    }
 
+	    String newKey;
+	    String fileName;
+	    String contentType;
+	    Long size;
+
+	    if (file != null && !file.isEmpty()) {
+	        newKey = resumeStorage.upload(studentId, file);
+	        fileName = file.getOriginalFilename();
+	        contentType = file.getContentType();
+	        size = file.getSize();
+	    } else if (profile.getResumeKey() != null) {
+	        newKey = resumeStorage.copy(profile.getResumeKey(), studentId);
+	        fileName = profile.getResumeFileName();
+	        contentType = profile.getResumeContentType();
+	        size = profile.getResumeSize();
+	    } else {
+	        throw new BusinessRuleException("Please upload a resume");
+	    }
+
 	    Application app = new Application();
 	    app.setStudentId(studentId);
 	    app.setJobId(jobId);
 	    app.setStatus(AppliStatus.APPLIED);
 	    app.setAppliedAt(LocalDateTime.now());
-	    return appRepo.save(app);
-	}
+	    app.setResumeKey(newKey);
+	    app.setResumeFileName(fileName);
+	    app.setResumeContentType(contentType);
+	    app.setResumeSize(size);
+	    app.setResumeUploadedAt(LocalDateTime.now());
+
+
+	    try {
+	        return appRepo.save(app);
+	    } catch (RuntimeException e) {
+	        try {
+	            resumeStorage.delete(newKey);
+	        } catch (RuntimeException ex) {
+	            log.warn("Could not delete orphaned resume {}", newKey, ex);
+	        }
+	        if (e instanceof DataIntegrityViolationException) {
+	            throw new DuplicateResourceException("You are already registered for this job");
+	        }
+	        throw e;
+	    }
+	}   
    
    public Application updateApplicationStatus(Long recruiterId ,Long applicationId ,AppliStatus newStatus) {
 		 Optional<Application> application = appRepo.findById(applicationId); 
@@ -113,6 +159,24 @@ public class ApplicationService
 		 return app;
    }
    
+   public String getResumeUrl(Long callerId, Long applicationId) {
+	    Application app = appRepo.findById(applicationId)
+	            .orElseThrow(() -> new ResourceNotFoundException("No application found"));
+	    JobPosting post = jbRepo.findById(app.getJobId())
+	            .orElseThrow(() -> new ResourceNotFoundException("No job found"));
+
+	    boolean isOwnerStudent = callerId.equals(app.getStudentId());
+	    boolean isJobRecruiter = callerId.equals(post.getRecruiterId());
+	    if (!isOwnerStudent && !isJobRecruiter) {
+	        throw new UnauthorizedException("You don't have permission to view this resume");
+	    }
+	    if (app.getResumeKey() == null) {
+	        throw new ResourceNotFoundException("No resume attached to this application");
+	    }
+	    return resumeStorage.presignedUrl(app.getResumeKey(), app.getResumeFileName());
+	}
+   
+   
    public List<MyApplicationResponse> getMyApplication(Long studentId){
 	   List<Application> application = appRepo.findByStudentId(studentId);
 	   
@@ -122,20 +186,22 @@ public class ApplicationService
    }
     
    private MyApplicationResponse toMyApplicationResponse(Application app) {
-	   JobPosting job = jbRepo.findById(app.getJobId())
-			   .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
-   
-	   return new MyApplicationResponse(
-			   app.getApplicationId(),
-			   app.getJobId(),
-			   app.getStatus(),
-			   app.getAppliedAt(),
-			   job.getTitle(),
-			   job.getDescrip(),
-			   job.getJobStatus()
-			   );
-	   
-   }
+	    JobPosting job = jbRepo.findById(app.getJobId())
+	            .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
+
+	    MyApplicationResponse r = new MyApplicationResponse(
+	            app.getApplicationId(),
+	            app.getJobId(),
+	            app.getStatus(),
+	            app.getAppliedAt(),
+	            job.getTitle(),
+	            job.getDescrip(),
+	            job.getJobStatus());
+
+	    r.setResumeFileName(app.getResumeFileName());
+	    r.setHasResume(app.getResumeKey() != null);
+	    return r;
+	}
    
    public List<ApplicantsResponse> getApplicantsForJob(Long jobId,Long recruiterId) {
 	   Optional<JobPosting> jp = jbRepo.findById(jobId);
@@ -164,18 +230,23 @@ public class ApplicationService
 	   }
 	   Users user1 = user.get();
 	   
-	   return new ApplicantsResponse(
-			   user1.getUserName(),
-			   profile1.getAbout(),
-			   profile1.getBranch(),
-			   profile1.getCgpa(),
-			   profile1.getSkills(),
-			   user1.getEmailId(),
-			   app.getApplicationId(),
-			   app.getStatus(),
-			   app.getAppliedAt(),
-			   app.getStudentId()
-			   );
+	   ApplicantsResponse r = new ApplicantsResponse(
+		        user1.getUserName(),
+		        profile1.getAbout(),
+		        profile1.getBranch(),
+		        profile1.getCgpa(),
+		        profile1.getSkills(),
+		        user1.getEmailId(),
+		        app.getApplicationId(),
+		        app.getStatus(),
+		        app.getAppliedAt(),
+		        app.getStudentId());
+
+		r.setResumeFileName(app.getResumeFileName());
+		r.setResumeSize(app.getResumeSize());
+		r.setResumeUploadedAt(app.getResumeUploadedAt());
+		r.setHasResume(app.getResumeKey() != null);
+		return r;
 	   
    }
 }
