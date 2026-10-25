@@ -1,5 +1,7 @@
 package com.jai.HireBridge.dto;
 
+import java.time.LocalDateTime;
+
 public class StudentProfileResponse 
 {
   private String userName;
@@ -9,6 +11,9 @@ public class StudentProfileResponse
   private String branch;
   private Double cgpa;
   private String skills;
+  private String resumeFileName;
+  private Long resumeSize;
+  private LocalDateTime resumeUploadedAt;
   public String getUserName() {
 	return userName;
   }
@@ -51,6 +56,25 @@ public class StudentProfileResponse
   public void setSkills(String skills) {
 	this.skills = skills;
   }
+  public String getResumeFileName() {
+	return resumeFileName;
+  }
+  public void setResumeFileName(String resumeFileName) {
+	this.resumeFileName = resumeFileName;
+  }
+  public Long getResumeSize() {
+	return resumeSize;
+  }
+  public void setResumeSize(Long resumeSize) {
+	this.resumeSize = resumeSize;
+  }
+  public LocalDateTime getResumeUploadedAt() {
+	return resumeUploadedAt;
+  }
+  public void setResumeUploadedAt(LocalDateTime resumeUploadedAt) {
+	this.resumeUploadedAt = resumeUploadedAt;
+  }
+  
   
   
 }
