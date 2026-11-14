@@ -89,7 +89,8 @@ public class JobPostingService
 			  job.getTitle(),
 			  job.getDescrip(),
 			  job.getCtc(),
-			  job.getMinCgpa(),
+			  jo
+			  b.getMinCgpa(),
 			  job.getDeadline(),
 			  job.getJobStatus()
 			  );	  

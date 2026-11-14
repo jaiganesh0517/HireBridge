@@ -6,12 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.jai.HireBridge.dto.ApplicantsResponse;
 import com.jai.HireBridge.dto.MyApplicationResponse;
+import com.jai.HireBridge.event.ApplicationStatusChangedEvent;
 import com.jai.HireBridge.exception.BusinessRuleException;
 import com.jai.HireBridge.exception.DuplicateResourceException;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
@@ -19,12 +22,14 @@ import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.AppliStatus;
 import com.jai.HireBridge.model.Application;
 import com.jai.HireBridge.model.JobPosting;
+import com.jai.HireBridge.model.RecruiterProfile;
 import com.jai.HireBridge.model.Status;
 import com.jai.HireBridge.model.StudentProfile;
 import com.jai.HireBridge.model.Users;
 import com.jai.HireBridge.repositories.ApplicationRepository;
 import com.jai.HireBridge.repositories.JobEligibleRepository;
 import com.jai.HireBridge.repositories.JobPostingRepository;
+import com.jai.HireBridge.repositories.RecruiterRepository;
 import com.jai.HireBridge.repositories.StudentRepository;
 import com.jai.HireBridge.repositories.UsersRepository;
 import com.jai.HireBridge.statemachine.ApplicationStateMachine;
@@ -39,26 +44,32 @@ public class ApplicationService
    private JobPostingRepository jbRepo;
    private StudentRepository sPRepo;
    private JobEligibleRepository jERepo;
-   private StudentRepository pRepo;
    private UsersRepository userRepo;
+   private RecruiterRepository recruitRepo;
    private ApplicationStateMachine appMachine;
    private ResumeStorageService resumeStorage;
+   private final ApplicationEventPublisher eventPublisher;
+   
    private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
    
  
-   
+    
 
    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository jbRepo, StudentRepository sPRepo,
-			JobEligibleRepository jERepo, UsersRepository userRepo, ApplicationStateMachine appMachine,
-			ResumeStorageService resumeStorage) {
-		this.appRepo = appRepo;
-		this.jbRepo = jbRepo;
-		this.sPRepo = sPRepo;
-		this.jERepo = jERepo;
-		this.userRepo = userRepo;
-		this.appMachine = appMachine;
-		this.resumeStorage = resumeStorage;
-	}
+		JobEligibleRepository jERepo, RecruiterRepository recruitRepo, UsersRepository userRepo,
+		ApplicationStateMachine appMachine, ResumeStorageService resumeStorage,
+		ApplicationEventPublisher eventPublisher) {
+	super();
+	this.appRepo = appRepo;
+	this.jbRepo = jbRepo;
+	this.sPRepo = sPRepo;
+	this.jERepo = jERepo;
+	this.recruitRepo = recruitRepo;
+	this.userRepo = userRepo;
+	this.appMachine = appMachine;
+	this.resumeStorage = resumeStorage;
+	this.eventPublisher = eventPublisher;
+}
 
    public Application applyToJob(Long studentId, Long jobId ,MultipartFile file) {
 
@@ -134,29 +145,41 @@ public class ApplicationService
 	    }
 	}   
    
-   public Application updateApplicationStatus(Long recruiterId ,Long applicationId ,AppliStatus newStatus) {
-		 Optional<Application> application = appRepo.findById(applicationId); 
-		 if(application.isEmpty()) {
-			 throw new ResourceNotFoundException("NO Application found");
-		 }
-		 Application app = application.get();
-		 Long id = app.getJobId();
-		 Optional<JobPosting> jobPost = jbRepo.findById(id);
-		 if(jobPost.isEmpty()) {
-			 throw new ResourceNotFoundException("NO job found");
-		 }
-		 JobPosting post = jobPost.get();
-		 if(!recruiterId.equals(post.getRecruiterId())) {
-			 throw new UnauthorizedException("You don't have permision to change this application");
-		 }
-		 AppliStatus current = app.getStatus();
-		 if (!appMachine.isValidTransition(current, newStatus)) {
-		     throw new BusinessRuleException(
-		         "Cannot change status from " + current + " to " + newStatus);
-		 }
-		 app.setStatus(newStatus);
-		 appRepo.save(app);
-		 return app;
+   @Transactional
+   public Application updateApplicationStatus(Long recruiterId, Long applicationId, AppliStatus newStatus) {
+       Application app = appRepo.findById(applicationId)
+               .orElseThrow(() -> new ResourceNotFoundException("NO Application found"));
+
+       JobPosting post = jbRepo.findById(app.getJobId())
+               .orElseThrow(() -> new ResourceNotFoundException("NO job found"));
+
+       if (!recruiterId.equals(post.getRecruiterId())) {
+           throw new UnauthorizedException("You don't have permision to change this application");
+       }
+
+       AppliStatus current = app.getStatus();
+       if (!appMachine.isValidTransition(current, newStatus)) {
+           throw new BusinessRuleException("Cannot change status from " + current + " to " + newStatus);
+       }
+
+       app.setStatus(newStatus);
+       appRepo.save(app);
+
+       Users student = userRepo.findById(app.getStudentId())
+               .orElseThrow(() -> new ResourceNotFoundException("NO student found"));
+       RecruiterProfile recruiter = recruitRepo.findById(recruiterId)
+               .orElseThrow(() -> new ResourceNotFoundException("NO student found"));
+
+       eventPublisher.publishEvent(new ApplicationStatusChangedEvent(
+               app.getJobId(),
+               student.getUserName(),
+               student.getEmailId(),
+               post.getTitle(),
+               recruiter.getCompanyName(),
+               current,
+               newStatus));
+
+       return app;
    }
    
    public String getResumeUrl(Long callerId, Long applicationId) {
