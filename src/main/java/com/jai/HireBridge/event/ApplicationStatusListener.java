@@ -7,20 +7,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import com.jai.HireBridge.service.EmailService;
+
 @Component
 public class ApplicationStatusListener {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationStatusListener.class);
 
-    @Async
+    private final EmailService emailService;
+
+    public ApplicationStatusListener(EmailService emailService) {
+        this.emailService = emailService;
+    }
+
+    @Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onStatusChanged(ApplicationStatusChangedEvent event) {
         try {
-            log.info("Would email {}: your application for {} at {} is now {}",
-                    event.studentEmail(), event.jobTitle(),
-                    event.companyName(), event.newStatus());
+            emailService.sendStatusEmail(event);
+            log.info("Status email sent to {} for application {}", event.studentEmail(), event.applicationId());
         } catch (Exception e) {
-            log.error("Failed to handle status event for application {}", event.applicationId(), e);
+            log.error("Failed to send status email for application {}", event.applicationId(), e);
         }
     }
 }
