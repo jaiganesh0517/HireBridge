@@ -172,6 +172,7 @@ public class ApplicationService
 
        eventPublisher.publishEvent(new ApplicationStatusChangedEvent(
                app.getJobId(),
+               app.getStudentId(),
                student.getUserName(),
                student.getEmailId(),
                post.getTitle(),

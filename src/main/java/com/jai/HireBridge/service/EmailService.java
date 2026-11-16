@@ -14,6 +14,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import com.jai.HireBridge.event.ApplicationStatusChangedEvent;
+import com.jai.HireBridge.exception.EmailSendFailedException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,36 +42,36 @@ public class EmailService {
         this.from = from;
     }
 
-    public void sendStatusEmail(ApplicationStatusChangedEvent e) throws Exception {
-        MimeMessage mime = buildMessage(e);          // built once, never retried
-        sendWithRetry(mime, e.studentEmail());       // only this part is retried
+    public int sendStatusEmail(ApplicationStatusChangedEvent e) throws Exception {   // returns attempts used
+        MimeMessage mime = buildMessage(e);
+        return sendWithRetry(mime, e.studentEmail());
     }
 
-    private void sendWithRetry(MimeMessage mime, String to) {
+    private int sendWithRetry(MimeMessage mime, String to) {
         long delay = INITIAL_DELAY_MS;
 
         for (int attempt = 1; ; attempt++) {
             try {
                 mailSender.send(mime);
-                return;
+                return attempt;
             } catch (MailException ex) {
                 if (!isTransient(ex)) {
                     log.error("Permanent mail failure for {}, not retrying", to);
-                    throw ex;
+                    throw new EmailSendFailedException(attempt, ex);
                 }
                 if (attempt == MAX_ATTEMPTS) {
                     log.error("Giving up on {} after {} attempts", to, attempt);
-                    throw ex;
+                    throw new EmailSendFailedException(attempt, ex);
                 }
                 log.warn("Attempt {}/{} to email {} failed ({}), retrying in {} ms",
                         attempt, MAX_ATTEMPTS, to, ex.getMessage(), delay);
                 try {
                     Thread.sleep(delay);
                 } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();  // app is shutting down, stop retrying
-                    throw ex;
+                    Thread.currentThread().interrupt();
+                    throw new EmailSendFailedException(attempt, ex);
                 }
-                delay *= 2;                               // 2s, then 4s
+                delay *= 2;
             }
         }
     }
