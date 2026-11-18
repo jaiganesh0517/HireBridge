@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -19,8 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 
+import com.jai.HireBridge.event.ApplicationStatusChangedEvent;
 import com.jai.HireBridge.exception.BusinessRuleException;
 import com.jai.HireBridge.exception.DuplicateResourceException;
 import com.jai.HireBridge.exception.ResourceNotFoundException;
@@ -28,11 +31,14 @@ import com.jai.HireBridge.exception.UnauthorizedException;
 import com.jai.HireBridge.model.AppliStatus;
 import com.jai.HireBridge.model.Application;
 import com.jai.HireBridge.model.JobPosting;
+import com.jai.HireBridge.model.RecruiterProfile;   // use your real class name if different
 import com.jai.HireBridge.model.Status;
 import com.jai.HireBridge.model.StudentProfile;
+import com.jai.HireBridge.model.Users;
 import com.jai.HireBridge.repositories.ApplicationRepository;
 import com.jai.HireBridge.repositories.JobEligibleRepository;
 import com.jai.HireBridge.repositories.JobPostingRepository;
+import com.jai.HireBridge.repositories.RecruiterRepository;
 import com.jai.HireBridge.repositories.StudentRepository;
 import com.jai.HireBridge.repositories.UsersRepository;
 import com.jai.HireBridge.statemachine.ApplicationStateMachine;
@@ -44,9 +50,11 @@ class ApplicationServiceTest {
     @Mock private JobPostingRepository jbRepo;
     @Mock private StudentRepository sPRepo;
     @Mock private JobEligibleRepository jERepo;
+    @Mock private RecruiterRepository recruiterRepo;
     @Mock private UsersRepository userRepo;
     @Mock private ApplicationStateMachine appMachine;
     @Mock private ResumeStorageService resumeStorage;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private ApplicationService service;
 
@@ -61,8 +69,8 @@ class ApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        // VERIFY: argument order must match your real constructor
-        service = new ApplicationService(appRepo, jbRepo, sPRepo, jERepo, userRepo, appMachine, resumeStorage);
+        service = new ApplicationService(appRepo, jbRepo, sPRepo, jERepo,
+                recruiterRepo, userRepo, appMachine, resumeStorage, eventPublisher);
     }
 
     // ---------- helpers ----------
@@ -260,6 +268,9 @@ class ApplicationServiceTest {
 
         verify(resumeStorage).delete(COPY_KEY); // the orphaned copy is cleaned up
     }
+
+    // ---------- getResumeUrl ----------
+
     @Test
     void getResumeUrl_applicationNotFound_throwsNotFound() {
         when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.empty());
@@ -364,16 +375,38 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void updateStatus_ownerRecruiter_updatesAndSaves() {
+    void updateStatus_invalidTransition_publishesNoEvent() {
+        Application app = existingApplication();
+        when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
+        when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
+        when(appMachine.isValidTransition(AppliStatus.APPLIED, AppliStatus.SELECTED)).thenReturn(false);
+
+        assertThrows(BusinessRuleException.class,
+                () -> service.updateApplicationStatus(RECRUITER_ID, APPLICATION_ID, AppliStatus.SELECTED));
+
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void updateStatus_ownerRecruiter_updatesSavesAndPublishesEvent() {
         Application app = existingApplication();
         when(appRepo.findById(APPLICATION_ID)).thenReturn(Optional.of(app));
         when(jbRepo.findById(JOB_ID)).thenReturn(Optional.of(jobOwnedBy(RECRUITER_ID)));
         when(appMachine.isValidTransition(AppliStatus.APPLIED, AppliStatus.SHORTLISTED)).thenReturn(true);
+        when(userRepo.findById(STUDENT_ID)).thenReturn(Optional.of(mock(Users.class)));
+        when(recruiterRepo.findById(RECRUITER_ID)).thenReturn(Optional.of(mock(RecruiterProfile.class)));
 
         Application result = service.updateApplicationStatus(
                 RECRUITER_ID, APPLICATION_ID, AppliStatus.SHORTLISTED);
 
         assertEquals(AppliStatus.SHORTLISTED, result.getStatus());
         verify(appRepo).save(app);
+
+        ArgumentCaptor<ApplicationStatusChangedEvent> captor =
+                ArgumentCaptor.forClass(ApplicationStatusChangedEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(AppliStatus.APPLIED, captor.getValue().oldStatus());
+        assertEquals(AppliStatus.SHORTLISTED, captor.getValue().newStatus());
+        assertEquals(STUDENT_ID, captor.getValue().studentId());
     }
 }
